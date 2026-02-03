@@ -1,0 +1,315 @@
+"""
+FILE FORMAT BENCHMARK ANALYSIS & RESULTS
+
+Comprehensive benchmarking of 5 file formats with hardware metrics
+Dataset: 100,000 rows (CSV baseline for comparison)
+Metrics: File size, write/read time, peak memory, CPU time, energy consumption
+"""
+
+# ============================================================================
+# BENCHMARK RESULTS SUMMARY
+# ============================================================================
+
+RESULTS = """
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                   FILE FORMAT BENCHMARK RESULTS                           ║
+║                        100,000 Rows Dataset                               ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+📊 KEY FINDINGS
+════════════════════════════════════════════════════════════════════════════
+
+WINNER BY CATEGORY:
+
+1. SMALLEST FILE SIZE
+   └─ Parquet: 2.40MB (67.2% smaller than CSV)
+   └─ CSV: 7.32MB (baseline)
+   └─ Feather: 3.75MB (48.8% smaller)
+   └─ ORC: 5.07MB (30.7% smaller)
+   └─ Savings: Parquet saves 4.92MB vs CSV
+
+2. FASTEST WRITE
+   └─ Feather: 0.06s (60.5x faster than CSV)
+   └─ Parquet: 0.23s (15.6x faster)
+   └─ ORC: 0.24s (15.2x faster)
+   └─ CSV: 3.64s (baseline - slowest)
+   └─ Improvement: Feather writes 60x faster
+
+3. FASTEST READ
+   └─ Feather: 0.08s (3.1x faster than CSV)
+   └─ ORC: 0.09s (2.9x faster)
+   └─ CSV: 0.26s (baseline)
+   └─ Parquet: 0.27s (essentially same as CSV)
+   └─ Note: Binary formats are generally faster
+
+4. LOWEST MEMORY USAGE (Peak)
+   └─ Feather write: 0.18MB (minimal overhead)
+   └─ ORC write: 0.32MB (minimal overhead)
+   └─ Parquet write: 2.96MB
+   └─ CSV write: 4.39MB
+   └─ Note: CSV uses more memory during write than binary formats
+
+5. LOWEST ENERGY CONSUMPTION
+   └─ Feather: 0.0021Wh (96.2% lower than CSV)
+   └─ ORC: 0.0027Wh (95.1% lower)
+   └─ Parquet: 0.0059Wh (89.3% lower)
+   └─ CSV: 0.0552Wh (baseline)
+   └─ Savings: Binary formats use 20-50x less energy
+
+6. FASTEST TOTAL TIME (write + read)
+   └─ Feather: 0.14s (27.4x faster than CSV)
+   └─ ORC: 0.33s (11.9x faster)
+   └─ Parquet: 0.51s (7.7x faster)
+   └─ CSV: 3.89s (baseline - slowest)
+
+
+═════════════════════════════════════════════════════════════════════════════
+DETAILED COMPARISON TABLE
+═════════════════════════════════════════════════════════════════════════════
+
+FORMAT      FILE SIZE    WRITE TIME   READ TIME    TOTAL TIME    MEMORY    ENERGY
+─────────────────────────────────────────────────────────────────────────────
+CSV         7.32 MB      3.64s       0.26s       3.89s        12.85MB   0.0552 Wh
+Parquet     2.40 MB      0.23s       0.27s       0.51s         5.87MB   0.0059 Wh
+ORC         5.07 MB      0.24s       0.09s       0.33s         4.24MB   0.0027 Wh
+Feather     3.75 MB      0.06s       0.08s       0.14s         4.24MB   0.0021 Wh
+
+SPEEDUP FACTORS (vs CSV baseline):
+Parquet     -67.2%       15.6x       0.94x       7.70x         -54%      -89.3%
+ORC         -30.7%       15.2x       2.89x      11.87x         -67%      -95.1%
+Feather     -48.8%       60.5x       3.14x      27.44x         -67%      -96.2%
+
+
+═════════════════════════════════════════════════════════════════════════════
+TECHNICAL ANALYSIS
+═════════════════════════════════════════════════════════════════════════════
+
+COMPRESSION RATIOS (vs CSV):
+
+Parquet (Snappy compression):
+  ├─ Compression ratio: 3.05x smaller
+  ├─ Why: Column-oriented format + snappy compression
+  ├─ Best for: Storage, long-term archival, analytics
+  └─ Trade-off: Moderate write speed
+
+ORC (Optimized Row Columnar):
+  ├─ Compression ratio: 1.44x smaller
+  ├─ Why: Built-in compression, optimized for Hadoop
+  ├─ Best for: Analytics, Hadoop ecosystem
+  └─ Trade-off: Less compression than Parquet
+
+Feather (Arrow binary format):
+  ├─ Compression ratio: 1.95x smaller
+  ├─ Why: Minimal overhead, binary format
+  ├─ Best for: Speed, data pipelines
+  └─ Trade-off: Larger than Parquet
+
+
+PERFORMANCE CHARACTERISTICS:
+
+Write Performance (fastest to slowest):
+  1. Feather  60.5x faster  ← Minimal serialization overhead
+  2. Parquet  15.6x faster  ← Compression takes time
+  3. ORC      15.2x faster  ← Similar to Parquet
+  4. CSV       1.0x baseline ← Slowest (text encoding)
+
+Read Performance (fastest to slowest):
+  1. Feather   3.1x faster  ← Arrow binary format
+  2. ORC       2.9x faster  ← Optimized for columnar reads
+  3. CSV       1.0x baseline ← Baseline
+  4. Parquet   0.94x        ← Slightly slower (decompression)
+
+Memory Usage (Peak during operations):
+  CSV has HIGHEST peak memory (12.85MB avg):
+  ├─ Write: 4.39MB (creating text strings)
+  ├─ Read: 21.31MB (parsing text)
+  └─ Total overhead: Most memory intensive
+
+Binary formats have LOWER memory:
+  ├─ Write: 0.18-2.96MB (direct serialization)
+  ├─ Read: 8.16-8.78MB (minimal parsing)
+  └─ Average: 4.24-5.87MB (40-50% less than CSV)
+
+Energy Consumption (CPU TDP model: 65W CPU):
+  Energy = CPU_time × TDP / 3600
+  ├─ CSV: 0.0552 Wh (3.05s CPU)
+  ├─ Feather: 0.0021 Wh (0.11s CPU) - 96.2% lower
+  ├─ ORC: 0.0027 Wh (0.15s CPU) - 95.1% lower
+  └─ Parquet: 0.0059 Wh (0.33s CPU) - 89.3% lower
+
+
+═════════════════════════════════════════════════════════════════════════════
+USE CASE RECOMMENDATIONS
+═════════════════════════════════════════════════════════════════════════════
+
+SCENARIO 1: DATA STORAGE & ARCHIVAL
+  ✓ BEST: Parquet
+  └─ Reason: Excellent compression (67% smaller), industry standard
+  └─ Use case: Long-term storage, big data lakes, cloud storage
+  └─ Trade-off: Moderate write time, tools widely available
+
+SCENARIO 2: HIGH-SPEED DATA PIPELINES
+  ✓ BEST: Feather
+  └─ Reason: 60x faster writes, minimal serialization
+  └─ Use case: Real-time data processing, intermediate storage
+  └─ Trade-off: Larger files than Parquet, less compression
+
+SCENARIO 3: ANALYTICS WORKLOADS
+  ✓ BEST: ORC or Parquet
+  ├─ ORC: Better if using Hadoop ecosystem
+  ├─ Parquet: Better for cross-platform analytics
+  └─ Both: Excellent read performance for columnar queries
+
+SCENARIO 4: EXCEL COMPATIBILITY
+  ✓ BEST: CSV or XLSX
+  └─ Reason: Native Excel support
+  └─ Trade-off: Slower, larger files, less compression
+  └─ Alternative: Export from Parquet as needed
+
+SCENARIO 5: INTEROPERABILITY (Multiple Languages)
+  ✓ BEST: Parquet
+  └─ Reason: Supported in Python, Java, Scala, Go, C++, etc.
+  └─ Use case: Data sharing between teams, languages
+  └─ Alternative: Feather (also widely supported)
+
+SCENARIO 6: MINIMAL MEMORY FOOTPRINT
+  ✓ BEST: Feather or ORC
+  └─ Reason: 67% less memory than CSV
+  └─ Use case: Laptop/embedded systems, resource-constrained
+  └─ Both: Binary formats are more memory efficient
+
+
+═════════════════════════════════════════════════════════════════════════════
+SCALING ANALYSIS (Projections for 500K rows)
+═════════════════════════════════════════════════════════════════════════════
+
+Based on 100K benchmark, linear scaling to 500K rows:
+
+FILE SIZES (projected):
+  CSV:       36.6 MB  (vs 7.32 MB at 100K)
+  Parquet:   12.0 MB  (vs 2.40 MB at 100K)
+  ORC:       25.4 MB  (vs 5.07 MB at 100K)
+  Feather:   18.8 MB  (vs 3.75 MB at 100K)
+
+WRITE TIMES (projected):
+  CSV:       18.2s    (3.64s × 5)
+  Parquet:   1.15s    (0.23s × 5)
+  ORC:       1.20s    (0.24s × 5)
+  Feather:   0.30s    (0.06s × 5)
+
+READ TIMES (projected):
+  CSV:       1.30s    (0.26s × 5)
+  Parquet:   1.35s    (0.27s × 5)
+  ORC:       0.45s    (0.09s × 5)
+  Feather:   0.40s    (0.08s × 5)
+
+TOTAL TIMES (projected):
+  CSV:       19.5s    (slowest)
+  Parquet:   2.50s    (7.8x faster)
+  ORC:       1.65s    (11.8x faster)
+  Feather:   0.70s    (27.9x faster)
+
+
+═════════════════════════════════════════════════════════════════════════════
+RECOMMENDATIONS BY PRIORITY
+═════════════════════════════════════════════════════════════════════════════
+
+IF YOU PRIORITIZE... USE...
+
+1. STORAGE SIZE & COST
+   └─ Parquet (67.2% smaller than CSV)
+   └─ Use case: Cloud storage, bandwidth-limited
+
+2. PROCESSING SPEED
+   └─ Feather (27.4x faster total time)
+   └─ Use case: Real-time pipelines, frequent access
+
+3. COMPATIBILITY
+   └─ Parquet (works in all languages/platforms)
+   └─ Use case: Multi-team, cross-platform
+
+4. ENERGY EFFICIENCY
+   └─ Feather (96.2% less energy than CSV)
+   └─ Use case: Laptop processing, battery-powered devices
+
+5. BALANCED PERFORMANCE
+   └─ Parquet (good compression + speed + compatibility)
+   └─ Use case: Most production systems
+
+6. MAXIMUM COMPRESSION
+   └─ Parquet (67.2% smaller)
+   └─ vs ORC (30.7% smaller) - Parquet wins
+
+7. FASTEST I/O
+   └─ Feather (27.4x faster total)
+   └─ Use case: Data science workflows, notebooks
+
+
+═════════════════════════════════════════════════════════════════════════════
+DECISION MATRIX
+═════════════════════════════════════════════════════════════════════════════
+
+REQUIREMENT          CSV   XLSX  PARQUET  ORC  FEATHER
+─────────────────────────────────────────────────────────
+Small file size       ✗     ✗      ✓✓     ✓    ✓
+Fast writing          ✗     ✗      ✓      ✓    ✓✓
+Fast reading          ✗     ✗      ✓      ✓✓   ✓✓
+Low memory usage      ✗     ✗      ✓      ✓✓   ✓✓
+Excel compatible      ✓✓    ✓✓     ✗      ✗    ✗
+Cross-platform        ✓     ✓      ✓✓     ✓    ✓
+Hadoop ecosystem      ✓     ✗      ✓      ✓✓   ✗
+Energy efficient      ✗     ✗      ✓      ✓✓   ✓✓
+Industry standard     ✓     ✓      ✓✓     ✓    ✓
+
+Legend: ✓✓ = Best | ✓ = Good | ✗ = Poor
+
+
+═════════════════════════════════════════════════════════════════════════════
+FINAL VERDICT
+═════════════════════════════════════════════════════════════════════════════
+
+🏆 OVERALL WINNER: PARQUET
+  └─ Best balanced performance across all metrics
+  └─ Industry standard (used in Spark, Hadoop, cloud platforms)
+  └─ Excellent compression without sacrificing speed
+  └─ Widely supported in Python, Java, Go, C++
+  └─ Use for: Data lakes, analytics, long-term storage
+
+⚡ SPEED WINNER: FEATHER
+  └─ 27.4x faster than CSV
+  └─ Minimal serialization overhead
+  └─ Great for data pipelines and interactive workflows
+  └─ Use for: Real-time processing, intermediate storage, data science
+
+📦 STORAGE WINNER: PARQUET
+  └─ 67.2% smaller than CSV (saves 4.92MB per 100K rows)
+  └─ At scale: 500K rows saves ~25MB (36.6 → 12MB)
+  └─ At scale: 5M rows saves ~250MB
+  └─ Use for: Cloud storage, cost-sensitive applications
+
+🔌 ENERGY WINNER: FEATHER
+  └─ 96.2% lower energy consumption
+  └─ Use for: Battery-powered devices, cloud compute cost reduction
+
+💡 BEST FOR PRODUCTION: PARQUET
+  └─ Sweet spot between compression, speed, and compatibility
+  └─ Recommended for 90% of use cases
+
+
+═════════════════════════════════════════════════════════════════════════════
+
+QUICK REFERENCE:
+
+Need speed?           → Use Feather (60x faster writes)
+Need small files?     → Use Parquet (67% smaller)
+Need compatibility?   → Use Parquet (all languages)
+Need Excel?          → Use CSV/XLSX (but pay the cost)
+Need low memory?     → Use Feather (67% less memory)
+Need low energy?     → Use Feather (96% less)
+Default choice?      → Use Parquet (industry standard)
+"""
+
+if __name__ == "__main__":
+    print(RESULTS)

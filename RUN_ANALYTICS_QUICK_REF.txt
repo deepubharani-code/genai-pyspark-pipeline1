@@ -1,0 +1,209 @@
+# run_analytics.py - Quick Reference Card
+
+## 📍 File Location
+```
+/Users/bharani/Documents/genai-pyspark-pipeline1/run_analytics.py
+```
+
+## 🎯 Purpose
+Orchestrates complete PySpark sales analytics pipeline with timing and logging
+
+## ⚡ Quick Start
+
+### Basic Usage
+```bash
+python run_analytics.py
+```
+
+### With Options
+```bash
+# Top 20 customers instead of 10
+python run_analytics.py --top-customers 20
+
+# Custom data directory
+python run_analytics.py --data-dir /path/to/data
+
+# Verbose logging
+python run_analytics.py --verbose
+
+# All options combined
+python run_analytics.py --top-customers 25 --data-dir ./data --verbose
+```
+
+## 🏗️ Required Files
+```
+data/raw/
+├── customers.parquet
+├── products.parquet
+└── orders.parquet
+```
+
+## 📊 What It Does
+```
+1. ✓ Initialize Spark session (4GB, Kryo serialization)
+2. ✓ Load 3 Parquet files with timing
+3. ✓ Run top customers analysis (top N by revenue)
+4. ✓ Run category sales analysis (revenue breakdown)
+5. ✓ Run monthly trends analysis (MoM growth %)
+6. ✓ Display results with .show()
+7. ✓ Print execution time summary
+8. ✓ Stop Spark session (cleanup)
+```
+
+## 🔧 Main Class: AnalyticsRunner
+
+| Method | Purpose | Input | Output |
+|--------|---------|-------|--------|
+| `__init__()` | Initialize runner | data_dir (str) | - |
+| `initialize()` | Create Spark session | - | SparkSession |
+| `load_data()` | Load 3 Parquet files | - | (customers, products, orders) |
+| `run_top_customers_analysis()` | Top N by revenue | customers, orders, products, n | DataFrame |
+| `run_category_analysis()` | Sales by category | orders, products | DataFrame |
+| `run_trends_analysis()` | Monthly trends | orders, products | DataFrame |
+| `print_execution_summary()` | Display timing | - | Formatted output |
+| `cleanup()` | Stop Spark | - | - |
+| `run()` | Main pipeline | top_n (int) | - |
+
+## 📊 Output Example
+```
+================================================================================
+INITIALIZATION
+================================================================================
+✓ Spark session initialized in 2.1234s
+
+================================================================================
+LOADING DATA
+================================================================================
+✓ customers loaded in 0.1234s (1,000 rows, 3 columns)
+✓ products loaded in 0.0891s (500 rows, 4 columns)
+✓ orders loaded in 0.3456s (50,000 rows, 5 columns)
+
+================================================================================
+ANALYSIS 1: TOP 10 CUSTOMERS BY REVENUE
+================================================================================
+✓ Analysis completed in 1.2345s
+
+[DataFrame.show() output]
+
+SUMMARY STATISTICS
+Customer 1001: $12,345.67 spend | 45 orders | $274.35 avg/order
+...
+
+================================================================================
+ANALYSIS 2: SALES BY CATEGORY
+================================================================================
+✓ Analysis completed in 0.8901s
+
+[DataFrame.show() output]
+
+CATEGORY BREAKDOWN
+Electronics    | Revenue: $234,567.89 | Units: 1,234 | Avg: $432.10
+...
+
+================================================================================
+ANALYSIS 3: MONTH-OVER-MONTH TRENDS
+================================================================================
+✓ Analysis completed in 0.6543s
+
+[DataFrame.show() output]
+
+TREND ANALYSIS
+2025-01-01 | Revenue: $45,678.90 | Transactions: 1,234 | MoM: N/A (baseline)
+2025-02-01 | Revenue: $52,345.67 | Transactions: 1,456 | MoM: +14.63%
+...
+
+================================================================================
+EXECUTION TIME SUMMARY
+================================================================================
+Initialization              2.1234s  ✓
+Load Customers              0.1234s  ✓
+Load Products               0.0891s  ✓
+Load Orders                 0.3456s  ✓
+Top Customers Analysis      1.2345s  ✓
+Sales By Category Analysis  0.8901s  ✓
+Monthly Trends Analysis     0.6543s  ✓
+────────────────────────────────────────
+TOTAL                       5.4604s
+
+PERFORMANCE BREAKDOWN:
+  Initialization: 2.1234s
+  Data Loading:   0.5581s
+  Analytics:      2.7789s
+
+================================================================================
+CLEANUP
+================================================================================
+✓ Spark session stopped successfully
+```
+
+## 🔗 Imports
+```python
+from src.spark_analytics import SalesAnalytics  # Core analytics engine
+from pyspark.sql import DataFrame
+import logging, time, argparse, pathlib
+```
+
+## ⚙️ Configuration
+- **Data Directory:** `data/raw/` (default, configurable)
+- **Top Customers:** 10 (default, configurable)
+- **Spark Driver Memory:** 4GB
+- **Spark Master:** local[*] (all cores)
+- **Serializer:** Kryo
+- **Logging Level:** INFO (DEBUG with --verbose)
+
+## 📈 Execution Times
+- **Initialization:** ~2-3 seconds
+- **Load Each File:** ~0.1-0.5 seconds
+- **Top Customers:** ~1-2 seconds
+- **Sales by Category:** ~0.5-1 second
+- **Monthly Trends:** ~0.5-1 second
+- **Total:** ~5-10 seconds
+
+## ✅ All 7 Requirements Met
+1. ✓ Imports SalesAnalytics from src.spark_analytics
+2. ✓ Creates Spark session (4GB, Kryo, AQE)
+3. ✓ Loads customers.parquet, products.parquet, orders.parquet
+4. ✓ Runs all 3 analytics methods
+5. ✓ Displays results using .show()
+6. ✓ Prints execution time for each operation
+7. ✓ Stops Spark session at the end
+
+## 🚀 Programmatic Usage
+```python
+from run_analytics import AnalyticsRunner
+
+# Create runner
+runner = AnalyticsRunner(data_dir="data/raw")
+
+# Run pipeline
+runner.run(top_n=20)
+```
+
+## 🐛 Error Handling
+- Missing files logged but pipeline continues
+- Exceptions caught and logged
+- Spark always stopped (finally block)
+- Detailed error messages for debugging
+
+## 📚 Related Files
+- `src/spark_analytics.py` - Core analytics engine (463 lines)
+- `spark_analytics_example.py` - Simple usage examples
+- `generate_sample_data.py` - Create test data
+- `optimized_spark_config.py` - Advanced configurations
+
+## 📖 Documentation Files
+- `RUN_ANALYTICS_VERIFICATION.md` - Detailed requirements checklist
+- `ANALYTICS_PIPELINE_COMPLETE.md` - Complete architecture guide
+- `PYSPARK_ANALYTICS_GUIDE.md` - Comprehensive tutorial
+
+## 🎓 Learning Path
+1. Read this quick reference
+2. Run: `python run_analytics.py`
+3. Review output and timing
+4. Customize parameters
+5. Study `src/spark_analytics.py` for core logic
+6. Modify analyses to suit your needs
+
+---
+
+**Status:** ✅ Production Ready | **Lines:** 403 | **Methods:** 9 | **CLI Args:** 3
